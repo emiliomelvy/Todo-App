@@ -1,6 +1,8 @@
+import 'react-native-gesture-handler';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import DraggableFlatList from 'react-native-draggable-flatlist';
 import React, {useState, useEffect} from 'react';
 import {
-  ScrollView,
   SafeAreaView,
   View,
   Text,
@@ -18,31 +20,71 @@ const Todo = () => {
 
   const [counter, setCounter] = useState(0);
 
+  const [idCounter, setIdCounter] = useState(1);
+
   const addTodo = () => {
     setTodos(prevTodos => [
       ...prevTodos,
       {
+        id: idCounter,
         name: newTodo,
         checked: false,
       },
     ]);
     setNewTodo('');
+    setIdCounter(idCounter + 1);
   };
 
-  const toggleTodo = index => {
+  const toggleTodo = id => {
     setTodos(prevTodos => {
-      const updatedTodos = [...prevTodos];
-      updatedTodos[index].checked = !updatedTodos[index].checked;
+      const updatedTodos = prevTodos.map(todo => {
+        if (todo.id === id) {
+          return {...todo, checked: !todo.checked};
+        }
+        return todo;
+      });
       return updatedTodos;
     });
   };
 
-  const deleteTodo = index => {
+  const deleteTodo = id => {
     setTodos(prevTodos => {
-      const updatedTodos = [...prevTodos];
-      updatedTodos.splice(index, 1);
-      return updatedTodos;
+      return prevTodos.filter(todo => todo.id !== id);
     });
+  };
+
+  const renderItem = ({item, drag, isActive}) => {
+    return (
+      <TouchableOpacity
+        style={{
+          borderWidth: 1,
+          padding: 10,
+          borderRadius: 5,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 20,
+          backgroundColor: isActive ? 'lightgrey' : 'white',
+        }}
+        onLongPress={drag}>
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <CheckBox
+            value={item.checked}
+            onValueChange={() => toggleTodo(item.id)}
+          />
+          <Text
+            style={[
+              item.checked ? {textDecorationLine: 'line-through'} : {},
+              {paddingLeft: 40},
+            ]}>
+            {item.name}
+          </Text>
+        </View>
+        <TouchableOpacity onPress={() => deleteTodo(item.id)}>
+          <Text style={{color: 'red', fontSize: 32}}>&#9746;</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    );
   };
 
   useEffect(() => {
@@ -51,7 +93,7 @@ const Todo = () => {
   }, [todos]);
 
   return (
-    <ScrollView>
+    <GestureHandlerRootView>
       <SafeAreaView
         style={{
           backgroundColor: colors.purple,
@@ -88,48 +130,18 @@ const Todo = () => {
         <Text style={{fontSize: 20, fontWeight: 'bold', paddingVertical: 10}}>
           Your To-Do List :
         </Text>
-        <View>
-          {todos.length === 0 ? (
-            <Text style={{fontSize: 20, color: 'black'}}>
-              You don't have to do list...
-            </Text>
-          ) : (
-            todos.map((todo, index) => {
-              return (
-                <View
-                  key={index}
-                  style={{
-                    borderWidth: 1,
-                    padding: 10,
-                    borderRadius: 5,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 20,
-                  }}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <CheckBox
-                      value={todo.checked}
-                      onValueChange={() => toggleTodo(index)}
-                    />
-                    <Text
-                      style={[
-                        todo.checked
-                          ? {textDecorationLine: 'line-through'}
-                          : {},
-                        {paddingLeft: 40},
-                      ]}>
-                      {todo.name}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => deleteTodo(index)}>
-                    <Text style={{color: 'red', fontSize: 32}}>&#9746;</Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })
-          )}
-        </View>
+        {todos.length === 0 ? (
+          <Text style={{fontSize: 20, color: 'black'}}>
+            You don't have to do list...
+          </Text>
+        ) : (
+          <DraggableFlatList
+            data={todos}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            onDragEnd={({data}) => setTodos(data)}
+          />
+        )}
       </SafeAreaView>
 
       <View style={{marginTop: 50, padding: 10}}>
@@ -137,7 +149,7 @@ const Todo = () => {
           Done : {counter}
         </Text>
       </View>
-    </ScrollView>
+    </GestureHandlerRootView>
   );
 };
 export default Todo;
