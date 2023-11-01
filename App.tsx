@@ -1,118 +1,105 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import 'react-native-gesture-handler';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import React, {useState, useEffect} from 'react';
+import {SafeAreaView, View, Text, TextInput, Button} from 'react-native';
+import colors from './src/Theme/colors';
+import TodoList from './src/Components/TodoList';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const App = () => {
+  const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState('');
+  const [counter, setCounter] = useState(0);
+  const [idCounter, setIdCounter] = useState(1);
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const addTodo = () => {
+    setTodos(prevTodos => [
+      ...prevTodos,
+      {
+        id: idCounter,
+        name: newTodo,
+        checked: false,
+      },
+    ]);
+    setNewTodo('');
+    setIdCounter(idCounter + 1);
   };
 
+  const toggleTodo = id => {
+    setTodos(prevTodos => {
+      const updatedTodos = prevTodos.map(todo => {
+        if (todo.id === id) {
+          return {...todo, checked: !todo.checked};
+        }
+        return todo;
+      });
+      return updatedTodos;
+    });
+  };
+
+  const deleteTodo = id => {
+    setTodos(prevTodos => {
+      return prevTodos.filter(todo => todo.id !== id);
+    });
+  };
+
+  useEffect(() => {
+    const checkedCount = todos.filter(todo => todo.checked).length;
+    setCounter(checkedCount);
+  }, [todos]);
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
+    <>
+      <SafeAreaView
+        style={{
+          backgroundColor: colors.purple,
+          paddingHorizontal: 10,
+          paddingVertical: 30,
+        }}>
+        <View>
+          <Text style={{fontSize: 32, color: colors.white, fontWeight: 'bold'}}>
+            Hello User
+          </Text>
+          <Text style={{color: colors.white, paddingTop: 5}}>
+            What are you going to do?
+          </Text>
+        </View>
         <View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            paddingTop: 10,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          <TextInput
+            value={newTodo}
+            onChangeText={text => setNewTodo(text)}
+            style={{borderWidth: 1, borderRadius: 10, padding: 10, flex: 3}}
+            placeholder="Add To Do"></TextInput>
+          <View style={{flex: 1}}>
+            <Button title="Add" onPress={addTodo}></Button>
+          </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+
+      <GestureHandlerRootView>
+        <View style={{padding: 10}}>
+          <Text style={{fontSize: 20, fontWeight: 'bold', paddingVertical: 10}}>
+            Your To-Do List :
+          </Text>
+          <TodoList
+            todos={todos}
+            toggleTodo={toggleTodo}
+            deleteTodo={deleteTodo}
+            setTodos={setTodos}
+          />
+        </View>
+      </GestureHandlerRootView>
+      <View style={{padding: 10}}>
+        <Text style={{fontSize: 20, fontWeight: 'bold', color: 'black'}}>
+          Done : {counter}
+        </Text>
+      </View>
+    </>
   );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
+};
 export default App;
